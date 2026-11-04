@@ -1,0 +1,102 @@
+# ============================================================
+# SpaceBasic Meal Booking Agent — Configuration
+# ============================================================
+# Edit this file to customise your booking preferences.
+# Credentials go in .env — NOT here.
+# ============================================================
+
+agent:
+  name: "SpaceBasic Meal Booking Agent"
+  version: "1.0.0"
+  timezone: "Asia/Kolkata"
+
+  # Daily trigger time (24-hour format)
+  booking_time: "07:30"          # When the agent runs each morning
+
+  # Safety mode: set to false only after you have tested successfully
+  dry_run: true                  # true = simulate only, never real booking
+
+  # How many days ahead to pre-check the calendar
+  lookahead_days: 7
+
+scheduler:
+  enabled: true
+  # Retry on transient failures (internet blip, brief site downtime)
+  max_retries: 2
+  retry_delay_seconds: 300       # Wait 5 min between retries
+
+meal_preferences:
+  # Meal types to book each day
+  book_breakfast: true
+  book_lunch: true
+  book_dinner: true
+
+  # Vegetarian or non-vegetarian
+  diet_type: "vegetarian"        # "vegetarian" | "non_vegetarian" | "both"
+
+  # Preferred meal names (as they appear in SpaceBasic).
+  # Leave empty to accept whatever is available.
+  breakfast_preferences:
+    - "Idli & Sambar"
+    - "Poha"
+    - "Upma"
+  lunch_preferences:
+    - "Rice & Dal"
+    - "Chapati & Sabzi"
+  dinner_preferences:
+    - "Chapati & Sabzi"
+    - "Rice & Curry"
+
+  # Fallback: book any available meal matching diet_type if preferred not found
+  allow_alternative: true
+
+  # Budget limits per meal (INR 0 = no limit)
+  max_breakfast_price: 0
+  max_lunch_price: 0
+  max_dinner_price: 0
+  max_daily_budget: 0            # 0 = no overall daily cap
+
+  # Skip booking if price exceeds budget (don't book cheaper alternative)
+  strict_budget: false
+
+calendar:
+  # Path to uploaded college calendar file
+  # Supported: .pdf, .csv, .xlsx, .xls, .png, .jpg
+  file_path: "data/calendar/college_calendar.pdf"
+
+  # Academic year start / end — used as a sanity check
+  academic_year_start: "2025-07-01"
+  academic_year_end:   "2026-05-31"
+
+  # Treat Saturdays as working days (some colleges have Sat classes)
+  saturday_working: false
+  sunday_working: false
+
+notifications:
+  desktop_notifications: true
+  email_notifications: false     # Requires SMTP settings in .env
+
+  # Send a daily summary even on non-booking days
+  daily_summary: true
+  daily_summary_time: "20:00"   # 8 PM recap
+
+browser:
+  # Playwright browser: "chromium" | "firefox" | "webkit"
+  browser_type: "chromium"
+
+  # Use a persistent profile so login session is saved
+  persistent_profile: true
+  profile_dir: "browser_profile"
+
+  # Show browser window (false = headless, recommended for automation)
+  headless: true
+
+  # How long to wait for page elements (seconds)
+  page_timeout: 30
+
+logging:
+  level: "INFO"                  # DEBUG | INFO | WARNING | ERROR
+  log_dir: "logs"
+  max_log_size_mb: 10
+  backup_count: 5
+

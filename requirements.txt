@@ -1,0 +1,15 @@
+# SpaceBasic WhatsApp Agent - Requirements
+# Lighter than before — no Streamlit needed
+
+flask==3.0.3
+twilio==9.3.7
+playwright==1.47.0
+python-dotenv==1.0.1
+pyyaml==6.0.2
+pytz==2024.2
+python-dateutil==2.9.0.post0
+pandas==2.2.3
+pdfplumber==0.11.4
+openpyxl==3.1.5
+requests==2.32.3
+waitress==3.0.0          # Production WSGI server for Windows

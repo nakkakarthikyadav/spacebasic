@@ -1,0 +1,55 @@
+# ============================================================
+# SpaceBasic WhatsApp Bot — Configuration
+# ============================================================
+
+agent:
+  name: "SpaceBasic WhatsApp Bot"
+  timezone: "Asia/Kolkata"
+  dry_run: true          # Set to false for live bookings
+
+meal_preferences:
+  book_breakfast: true
+  book_lunch: true
+  book_dinner: true
+  diet_type: "vegetarian"     # vegetarian | non_vegetarian
+  
+  # Exact meal names as they appear in SpaceBasic UI
+  # Leave empty [] to accept any available meal
+  breakfast_preferences: []
+  lunch_preferences: []
+  dinner_preferences: []
+  
+  allow_alternative: true
+  max_daily_budget: 0         # 0 = no limit (INR)
+
+calendar:
+  file_path: "data/calendar/college_calendar.pdf"
+  academic_year_start: "2025-07-01"
+  academic_year_end:   "2026-05-31"
+  saturday_working: false
+  sunday_working: false
+
+browser:
+  # Path to your Chrome/Chromium user data (for session reuse)
+  # Windows default Chrome:
+  # SpaceBasic URLs (pre-filled for portal.spacebasic.com)
+  spacebasic_base_url: "https://portal.spacebasic.com"
+  spacebasic_booking_url: "https://portal.spacebasic.com/module/messmanager/bookings"
+  
+  chrome_profile_path: "C:\\Users\\Karthik N\\AppData\\Local\\Google\\Chrome\\User Data"
+  chrome_profile_name: "Default"
+  
+  # Playwright persistent profile (copied from Chrome)
+  playwright_profile: "browser_profile"
+  
+  headless: true           # false = see browser window (good for debugging)
+  page_timeout: 30         # seconds
+
+server:
+  port: 5000
+  host: "0.0.0.0"
+
+logging:
+  level: "INFO"
+  log_dir: "logs"
+

@@ -1,0 +1,22 @@
+# Ignore secrets and generated files
+.env
+*.db
+logs/
+browser_profile/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+Thumbs.db
+data/calendar/*.pdf
+data/calendar/*.xlsx
+data/calendar/*.csv
+data/calendar/*.png
+data/calendar/*.jpg
+
