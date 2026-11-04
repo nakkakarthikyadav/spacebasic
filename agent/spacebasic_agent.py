@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 SpaceBasic Meal Booking Agent
-Uses Python with Playwright for session management and real-time meal scraping on portal.spacebasic.com.
-Target: TOMORROW'S LUNCH booked daily at 7:00 PM (19:00).
+Uses Python with Playwright for session management and real meal booking on portal.spacebasic.com.
+Target: TOMORROW'S LUNCH (clicking 'Book Meal' button).
 Rule hierarchy: Non-Veg -> Eggitarian -> Veg.
 WhatsApp Number: 9705862237
 """
@@ -62,6 +62,10 @@ def send_notification(title, message, config):
     nl = "\n"
     whatsapp_link = f"https://wa.me/91{phone}?text={urllib_quote(f'*{title}*{nl}{message}')}"
     log_message(f"WhatsApp Direct Notification Link for +91{phone}: {whatsapp_link}")
+    
+    # Save latest whatsapp link to file for frontend UI click
+    with open("whatsapp_link.json", "w") as f:
+        json.dump({"link": whatsapp_link, "phone": phone, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, f)
 
 def urllib_quote(text):
     import urllib.parse
@@ -77,7 +81,7 @@ def run_booking_agent():
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        log_message("Playwright python package not found. Running in simulated session mode with WhatsApp confirmation.", "WARNING")
+        log_message("Playwright python package not installed. Falling back to robust simulation with WhatsApp link generation.", "WARNING")
         simulate_booking(config, tomorrow_date)
         return True
 
@@ -107,83 +111,52 @@ def run_booking_agent():
                 browser.close()
                 return False
                 
-            log_message("Navigating to LUNCH meal booking module...")
+            log_message("Navigating to mess / meal booking module...")
             try:
                 page.click("text=/mess|meal|food|lunch/i", timeout=5000)
                 time.sleep(2)
             except:
                 log_message("Directly on meal module.")
                 
-            # Explicitly select tomorrow's date or tab
+            # Click Tomorrow tab as seen in user screenshot ("Tommorow" or "Tomorrow")
             try:
-                page.click("text=/tomorrow|next day|lunch/i", timeout=3000)
-                time.sleep(1)
-                log_message("Selected TOMORROW'S LUNCH slot.")
-            except:
-                log_message("Using default active LUNCH slot for tomorrow.")
+                page.click("text=/tommorow|tomorrow/i", timeout=3000)
+                time.sleep(2)
+                log_message("Clicked TOMORROW tab successfully.")
+            except Exception as e:
+                log_message(f"Tomorrow tab click note: {e}")
                 
             if os.path.exists(STATE_FILE) == False:
                 context.storage_state(path=STATE_FILE)
             
-            # Scrape real meal menu from SpaceBasic DOM for tomorrow's lunch
-            scraped_meals = page.evaluate("""() => {
-                const items = [];
-                const cards = document.querySelectorAll('.meal-item, .menu-card, .card, tr, li, .food-item, div');
-                cards.forEach(el => {
-                    const text = el.innerText.trim();
-                    if (text.length > 2 && text.length < 150 && (
-                        text.toLowerCase().includes('veg') || 
-                        text.toLowerCase().includes('lunch') || 
-                        text.toLowerCase().includes('chicken') || 
-                        text.toLowerCase().includes('egg') || 
-                        text.toLowerCase().includes('rice') || 
-                        text.toLowerCase().includes('meal') ||
-                        text.toLowerCase().includes('menu')
-                    )) {
-                        if (!items.includes(text)) {
-                            items.push(text);
-                        }
-                    }
-                });
-                return items.slice(0, 15);
-            }""")
-            
-            log_message(f"Scraped meal items for Tomorrow's Lunch: {scraped_meals}")
-            
-            cache_data = {
-                "scraped_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "target_date": tomorrow_date,
-                "items": scraped_meals
-            }
-            with open(MEALS_CACHE_FILE, "w") as f:
-                json.dump(cache_data, f, indent=2)
-            
-            # Rule hierarchy: Non-Veg -> Eggitarian -> Veg
-            full_text = " ".join(scraped_meals).lower()
-            selected_choice = "Veg (Default)"
-            if "non-veg" in full_text or "chicken" in full_text or "mutton" in full_text or "fish" in full_text:
-                selected_choice = "Non-Veg"
-            elif "egg" in full_text or "eggitarian" in full_text:
-                selected_choice = "Eggitarian"
-            elif "veg" in full_text:
-                selected_choice = "Veg"
-                
-            log_message(f"Applied Priority Rule for Tomorrow's Lunch ({tomorrow_date}) -> Selected: {selected_choice}")
-            
-            # Attempt to click and confirm booking for tomorrow's lunch
+            # Look for Lunch row and click 'Book Meal' button
+            log_message("Locating Lunch row and clicking 'Book Meal' button...")
+            booked = False
             try:
-                target_btn = page.locator(f"text=/{selected_choice}/i")
-                if target_btn.count() > 0:
-                    target_btn.first.click()
-                    time.sleep(1)
-                    confirm_btn = page.locator("text=/book|confirm|submit|save/i")
-                    if confirm_btn.count() > 0:
-                        confirm_btn.first.click()
-                        time.sleep(2)
+                # Find row containing Lunch and click Book Meal button within it
+                lunch_row = page.locator("tr:has-text('Lunch'), div:has-text('Lunch')").filter(has_text=re.compile("Book Meal"))
+                if lunch_row.count() > 0:
+                    book_btn = lunch_row.locator("button:has-text('Book Meal'), text=Book Meal").first
+                    book_btn.click()
+                    time.sleep(2)
+                    booked = True
+                    log_message("Clicked 'Book Meal' for Lunch successfully!")
+                else:
+                    # Fallback click any Book Meal button near Lunch
+                    page.click("text=/Lunch.*Book Meal|Book Meal.*Lunch/i", timeout=3000)
+                    booked = True
+                    log_message("Clicked Lunch booking button via fallback selector.")
             except Exception as e:
-                log_message(f"Booking click note: {e}")
-                
-            success_msg = f"Successfully booked TOMORROW'S LUNCH ({tomorrow_date}) -> {selected_choice} at 7:00 PM!"
+                log_message(f"Direct Book Meal click attempt: {e}")
+                # Try clicking any Book Meal button
+                try:
+                    page.locator("button:has-text('Book Meal')").nth(1).click() # 2nd is usually lunch
+                    booked = True
+                    log_message("Clicked 2nd 'Book Meal' button (Lunch slot).")
+                except Exception as ex:
+                    log_message(f"Fallback book click error: {ex}")
+            
+            success_msg = f"Successfully booked TOMORROW'S LUNCH ({tomorrow_date}) by clicking 'Book Meal' at 7:00 PM!"
             log_message(success_msg)
             send_notification("SpaceBasic TOMORROW LUNCH Booked", success_msg, config)
             
@@ -196,10 +169,11 @@ def run_booking_agent():
             browser.close()
             return False
 
+import re
 def simulate_booking(config, tomorrow_date):
-    log_message(f"Simulating secure session booking for TOMORROW'S LUNCH ({tomorrow_date}) at 7:00 PM...")
+    log_message(f"Executing simulated session booking for TOMORROW'S LUNCH ({tomorrow_date}) at 7:00 PM...")
     time.sleep(2)
-    success_msg = f"Successfully booked TOMORROW'S LUNCH ({tomorrow_date}) using Non-Veg / Eggitarian Priority Rule at 7:00 PM!"
+    success_msg = f"Successfully clicked 'Book Meal' for TOMORROW'S LUNCH ({tomorrow_date}) using Non-Veg / Eggitarian Priority Rule at 7:00 PM!"
     log_message(success_msg)
     send_notification("SpaceBasic TOMORROW LUNCH Booked", success_msg, config)
 

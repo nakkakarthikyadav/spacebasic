@@ -115,6 +115,17 @@ app.get('/api/logs', (req, res) => {
   }
 });
 
+app.get('/api/whatsapp-link', (req, res) => {
+  const LINK_FILE = path.resolve(process.cwd(), 'whatsapp_link.json');
+  if (fs.existsSync(LINK_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(LINK_FILE, 'utf-8'));
+      return res.json(data);
+    } catch (e) {}
+  }
+  res.json({ link: "https://wa.me/919705862237?text=SpaceBasic%20Agent%20Meal%20Booked%20Successfully", phone: "9705862237" });
+});
+
 app.post('/api/session', (req, res) => {
   try {
     const { cookies, storageState } = req.body;

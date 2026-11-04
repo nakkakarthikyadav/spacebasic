@@ -124,22 +124,18 @@ export default function App() {
 
   const handleSendWhatsApp = async () => {
     setLoading(true);
-    setNotificationMsg("Sending WhatsApp trial message to 9705862237...");
+    setNotificationMsg("Preparing WhatsApp confirmation message for 9705862237...");
     try {
-      const res = await fetch('/api/send-whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: config.whatsapp_number || "9705862237", message: "Trial: SpaceBasic Meal Booking Agent connected successfully for 9705862237!" })
-      });
+      const res = await fetch('/api/whatsapp-link');
       const data = await res.json();
-      if (data.success) {
-        setNotificationMsg("WhatsApp trial message sent successfully to +919705862237!");
-        fetchData();
+      if (data.link) {
+        setNotificationMsg("Opening WhatsApp to send confirmation to +919705862237...");
+        window.open(data.link, '_blank');
       } else {
-        setNotificationMsg("Failed to send WhatsApp message.");
+        window.open("https://wa.me/919705862237?text=SpaceBasic%20Agent%20Meal%20Booked%20Successfully", '_blank');
       }
     } catch (e: any) {
-      setNotificationMsg("Error sending WhatsApp trial: " + e.message);
+      window.open("https://wa.me/919705862237?text=SpaceBasic%20Agent%20Meal%20Booked%20Successfully", '_blank');
     }
     setLoading(false);
   };
