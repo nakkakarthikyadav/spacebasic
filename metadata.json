@@ -1,6 +1,0 @@
-{
-  "name": "SpaceBasic Meal Agent",
-  "description": "Automated daily meal booking agent for SpaceBasic portal using Python and Playwright session management with intelligent preference routing.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
